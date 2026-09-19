@@ -28,7 +28,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
 function AdminRoute({ children }: { children: ReactNode }) {
   const adminIsLoggedIn = useAppStore((state) => state.adminIsLoggedIn);
-  if (!adminIsLoggedIn) return <Navigate to="/admin/login" />;
+  if (!adminIsLoggedIn) return <Navigate to="/admin/login" replace />;
   return <>{children}</>;
 }
 
@@ -53,6 +53,7 @@ export default function App() {
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminAuth />} />
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           
           <Route path="*" element={<Navigate to="/" />} />

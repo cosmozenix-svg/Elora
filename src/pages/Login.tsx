@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppStore } from '../lib/store';
-import { Mail, Lock, Sun, Moon } from 'lucide-react';
+import { Mail, Lock, Sun, Moon, Shield } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -106,6 +106,16 @@ export default function Login() {
           <span className="text-slate-600 dark:text-slate-400">Don't have an account? </span>
           <Link to="/register" className="font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
             Register here
+          </Link>
+        </div>
+
+        <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-center">
+          <Link 
+            to="/admin/login" 
+            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
+            <Shield className="w-3.5 h-3.5" />
+            <span>Admin Portal</span>
           </Link>
         </div>
       </div>
