@@ -1,6 +1,6 @@
 {
   "name": "Elora",
-  "description": "An Android-optimized 9:16 currency sharing mobile application where you can send, add, and earn money.",
+  "description": "A 9:16 portrait currency sharing website where you can send, add, earn, recharge, and withdraw money.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
