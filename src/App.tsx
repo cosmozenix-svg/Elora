@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppStore } from './lib/store';
 import AndroidFrame from './components/AndroidFrame';
 
@@ -34,7 +34,7 @@ function AdminRoute({ children }: { children: ReactNode }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AndroidFrame>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -59,6 +59,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </AndroidFrame>
-    </BrowserRouter>
+    </HashRouter>
   );
 }

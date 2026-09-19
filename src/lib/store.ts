@@ -2,11 +2,46 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, Transaction, AppState } from '../types';
 
+const INITIAL_USERS: User[] = [
+  {
+    id: 10001,
+    fullName: 'Demo User',
+    username: 'demouser',
+    email: 'demo@elora.app',
+    password: 'password123',
+    balance: 2500,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    profilePic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 10002,
+    fullName: 'Rahim Ahmed',
+    username: 'rahim24',
+    email: 'rahim@elora.app',
+    password: 'password123',
+    balance: 850,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    profilePic: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'
+  }
+];
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      users: [],
-      transactions: [],
+      users: INITIAL_USERS,
+      transactions: [
+        {
+          id: 'init-tx-1',
+          userId: 10001,
+          type: 'add',
+          amount: 2500,
+          status: 'completed',
+          date: new Date(Date.now() - 3600000 * 24).toISOString(),
+          reference: 'Welcome Bonus'
+        }
+      ],
       currentUser: null,
       adminIsLoggedIn: false,
       theme: 'light',

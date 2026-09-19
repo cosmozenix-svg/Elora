@@ -84,9 +84,26 @@ export default function AdminAuth() {
 
           <button
             type="submit"
-            className="w-full mt-2 py-3 px-4 rounded-xl shadow-sm text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 active:scale-[0.98] transition-all"
+            className="w-full mt-2 py-3 px-4 rounded-xl shadow-sm text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 active:scale-[0.98] transition-all cursor-pointer"
           >
             Authenticate Admin
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setUsername('admin');
+              setPassword('admin123');
+              try {
+                loginAdmin('admin', 'admin123');
+                navigate('/admin');
+              } catch (err: any) {
+                setError(err.message);
+              }
+            }}
+            className="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 active:scale-[0.98] transition-all flex justify-center items-center gap-1.5 cursor-pointer"
+          >
+            <span>⚡ 1-Click Admin Login (admin / admin123)</span>
           </button>
         </form>
       </div>

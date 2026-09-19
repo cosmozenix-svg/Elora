@@ -26,7 +26,7 @@ export default function AndroidFrame({ children }: AndroidFrameProps) {
       <div
         id="elora-web-container"
         className={cn(
-          "w-full sm:w-auto h-[100dvh] sm:h-[94vh] sm:max-h-[900px] sm:aspect-[9/16] max-w-full sm:max-w-[480px]",
+          "w-full max-w-[460px] h-[100dvh] sm:h-[92vh] sm:max-h-[890px] sm:aspect-[9/16]",
           "bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100",
           "sm:rounded-2xl sm:shadow-2xl sm:border sm:border-slate-200/80 dark:sm:border-slate-800",
           "flex flex-col overflow-hidden relative transition-colors duration-300",
