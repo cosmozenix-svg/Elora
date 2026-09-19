@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppStore } from '../lib/store';
-import { Mail, Lock, Sun, Moon, Shield } from 'lucide-react';
+import { Mail, Lock, Sun, Moon } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -100,46 +100,12 @@ export default function Login() {
           >
             Sign in
           </button>
-
-          {/* 1-Click Demo Login */}
-          <button
-            type="button"
-            onClick={() => {
-              setEmail('demo@elora.app');
-              setPassword('password123');
-              try {
-                loginUser('demo@elora.app', 'password123');
-                navigate('/');
-              } catch (err: any) {
-                setError(err.message);
-              }
-            }}
-            className="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 active:scale-[0.98] transition-all flex justify-center items-center gap-1.5 cursor-pointer"
-          >
-            <span>⚡ 1-Click Demo Login</span>
-          </button>
         </form>
 
-        <div className="mt-4 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5">
-          <p><span className="font-semibold text-slate-700 dark:text-slate-300">User:</span> demo@elora.app / password123</p>
-          <p><span className="font-semibold text-slate-700 dark:text-slate-300">Admin:</span> admin / admin123</p>
-        </div>
-
-        <div className="mt-4 text-center text-xs">
+        <div className="mt-5 text-center text-xs">
           <span className="text-slate-600 dark:text-slate-400">Don't have an account? </span>
           <Link to="/register" className="font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
             Register here
-          </Link>
-        </div>
-
-        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
-          <span className="text-slate-400 text-[11px]">Staff & Managers</span>
-          <Link 
-            to="/admin/login" 
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-          >
-            <Shield className="w-3.5 h-3.5 text-blue-500" />
-            <span>Admin Portal &rarr;</span>
           </Link>
         </div>
       </div>

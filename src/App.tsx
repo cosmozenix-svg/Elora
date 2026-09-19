@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppStore } from './lib/store';
 import AndroidFrame from './components/AndroidFrame';
 
@@ -22,19 +22,21 @@ import UnderDevelopment from './pages/UnderDevelopment';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const currentUser = useAppStore((state) => state.currentUser);
-  if (!currentUser) return <Navigate to="/login" />;
+  if (!currentUser) return <Navigate to="/login" replace />;
   return <Layout>{children}</Layout>;
 }
 
-function AdminRoute({ children }: { children: ReactNode }) {
+function AdminGate() {
   const adminIsLoggedIn = useAppStore((state) => state.adminIsLoggedIn);
-  if (!adminIsLoggedIn) return <Navigate to="/admin/login" replace />;
-  return <>{children}</>;
+  if (!adminIsLoggedIn) {
+    return <AdminAuth />;
+  }
+  return <AdminDashboard />;
 }
 
 export default function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <AndroidFrame>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -51,14 +53,13 @@ export default function App() {
           <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
           <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
 
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminAuth />} />
-          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          {/* Secret Admin Route - accessed solely via /admin at the end of the URL */}
+          <Route path="/admin" element={<AdminGate />} />
+          <Route path="/admin/*" element={<AdminGate />} />
           
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AndroidFrame>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
