@@ -1,0 +1,24 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User accounts & approval queue
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    // Ledger transactions (transfers, deposits, recharges, withdrawals)
+    match /transactions/{transactionId} {
+      allow read, write: if true;
+    }
+
+    // System settings & admin announcements
+    match /settings/{settingId} {
+      allow read, write: if true;
+    }
+  }
+}

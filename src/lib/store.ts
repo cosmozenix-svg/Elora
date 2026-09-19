@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, Transaction, AppState } from '../types';
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  updateDoc, 
+  onSnapshot
+} from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from './firebase';
 
 const INITIAL_USERS: User[] = [
   {
@@ -27,21 +35,23 @@ const INITIAL_USERS: User[] = [
   }
 ];
 
+const INITIAL_TRANSACTIONS: Transaction[] = [
+  {
+    id: 'init-tx-1',
+    userId: 10001,
+    type: 'add',
+    amount: 2500,
+    status: 'completed',
+    date: new Date(Date.now() - 3600000 * 24).toISOString(),
+    reference: 'Welcome Bonus'
+  }
+];
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       users: INITIAL_USERS,
-      transactions: [
-        {
-          id: 'init-tx-1',
-          userId: 10001,
-          type: 'add',
-          amount: 2500,
-          status: 'completed',
-          date: new Date(Date.now() - 3600000 * 24).toISOString(),
-          reference: 'Welcome Bonus'
-        }
-      ],
+      transactions: INITIAL_TRANSACTIONS,
       currentUser: null,
       adminIsLoggedIn: false,
       theme: 'light',
@@ -71,21 +81,30 @@ export const useAppStore = create<AppState>()(
         set({ theme });
       },
 
-      registerUser: (userWithoutId) => {
-        set((state) => {
-          const maxId = state.users.reduce((max, u) => Math.max(max, u.id), 9999);
-          const newUser: User = { ...userWithoutId, id: maxId + 1 };
-          return { users: [...state.users, newUser] };
-        });
+      registerUser: async (userWithoutId) => {
+        const state = get();
+        const maxId = state.users.reduce((max, u) => Math.max(max, u.id), 9999);
+        const newUser: User = { ...userWithoutId, id: maxId + 1 };
+        
+        // Optimistic local update
+        set((s) => ({ users: [...s.users, newUser] }));
+
+        // Cloud persistence: save to Firestore so every device and admin sees it in real time
+        const path = `users/${newUser.id}`;
+        try {
+          await setDoc(doc(db, 'users', String(newUser.id)), newUser);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.WRITE, path);
+        }
       },
 
       loginUser: (email, password) => {
         const state = get();
         const user = state.users.find(
-          (u) => u.email === email && u.password === password
+          (u) => (u.email.toLowerCase() === email.toLowerCase() || u.username.toLowerCase() === email.toLowerCase()) && u.password === password
         );
-        if (!user) throw new Error('Invalid email or password.');
-        if (user.status === 'pending') throw new Error('Account pending approval. Check your email shortly.');
+        if (!user) throw new Error('Invalid email/username or password.');
+        if (user.status === 'pending') throw new Error('Account is pending admin approval.');
         if (user.status === 'banned' || user.status === 'blocked') throw new Error(`Account has been ${user.status}.`);
         
         set({ currentUser: user });
@@ -95,24 +114,37 @@ export const useAppStore = create<AppState>()(
         set({ currentUser: null });
       },
 
-      updateUser: (userId, updates) => {
+      updateUser: async (userId, updates) => {
         set((state) => ({
           users: state.users.map((u) => (u.id === userId ? { ...u, ...updates } : u)),
           currentUser: state.currentUser?.id === userId ? { ...state.currentUser, ...updates } : state.currentUser,
         }));
+
+        const path = `users/${userId}`;
+        try {
+          await updateDoc(doc(db, 'users', String(userId)), updates);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.UPDATE, path);
+        }
       },
 
-      addTransaction: (transaction) => {
-        set((state) => {
-          const uuid = typeof crypto !== 'undefined' && crypto.randomUUID
-            ? crypto.randomUUID()
-            : Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
-          const newTx = { ...transaction, id: uuid };
-          return { transactions: [...state.transactions, newTx] };
-        });
+      addTransaction: async (transaction) => {
+        const uuid = typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+        const newTx: Transaction = { ...transaction, id: uuid };
+
+        set((state) => ({ transactions: [newTx, ...state.transactions] }));
+
+        const path = `transactions/${newTx.id}`;
+        try {
+          await setDoc(doc(db, 'transactions', newTx.id), newTx);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.WRITE, path);
+        }
       },
 
-      sendMoney: (senderId, receiverId, amount, reference) => {
+      sendMoney: async (senderId, receiverId, amount, reference) => {
         const state = get();
         const sender = state.users.find(u => u.id === senderId);
         const receiver = state.users.find(u => u.id === receiverId);
@@ -122,14 +154,14 @@ export const useAppStore = create<AppState>()(
         if (sender.balance < amount) throw new Error("Insufficient balance.");
 
         // Deduct from sender
-        state.updateUser(sender.id, { balance: sender.balance - amount });
+        await state.updateUser(sender.id, { balance: sender.balance - amount });
         // Add to receiver
-        state.updateUser(receiver.id, { balance: receiver.balance + amount });
+        await state.updateUser(receiver.id, { balance: receiver.balance + amount });
 
         const now = new Date().toISOString();
         
         // Add transaction record for sender
-        state.addTransaction({
+        await state.addTransaction({
           userId: sender.id,
           type: 'send',
           amount: amount,
@@ -140,7 +172,7 @@ export const useAppStore = create<AppState>()(
         });
 
         // Add transaction record for receiver
-        state.addTransaction({
+        await state.addTransaction({
           userId: receiver.id,
           type: 'receive',
           amount: amount,
@@ -151,14 +183,14 @@ export const useAppStore = create<AppState>()(
         });
       },
 
-      addBalance: (userId, amount, method, trxId) => {
+      addBalance: async (userId, amount, method, trxId) => {
         const state = get();
         const user = state.users.find(u => u.id === userId);
         if (!user) throw new Error("User not found.");
 
-        state.updateUser(user.id, { balance: user.balance + amount });
+        await state.updateUser(user.id, { balance: user.balance + amount });
         
-        state.addTransaction({
+        await state.addTransaction({
           userId: user.id,
           type: 'add',
           amount: amount,
@@ -168,14 +200,14 @@ export const useAppStore = create<AppState>()(
         });
       },
 
-      earnMoney: (userId, amount) => {
+      earnMoney: async (userId, amount) => {
         const state = get();
         const user = state.users.find(u => u.id === userId);
-        if (!user) return; // Don't throw, just silently fail if not found
+        if (!user) return;
 
-        state.updateUser(user.id, { balance: user.balance + amount });
+        await state.updateUser(user.id, { balance: user.balance + amount });
         
-        state.addTransaction({
+        await state.addTransaction({
           userId: user.id,
           type: 'earn',
           amount: amount,
@@ -185,15 +217,15 @@ export const useAppStore = create<AppState>()(
         });
       },
 
-      rechargeMobile: (userId, phone, amount) => {
+      rechargeMobile: async (userId, phone, amount) => {
         const state = get();
         const user = state.users.find(u => u.id === userId);
         if (!user) throw new Error("User not found.");
         if (user.balance < amount) throw new Error("Insufficient balance.");
 
-        state.updateUser(user.id, { balance: user.balance - amount });
+        await state.updateUser(user.id, { balance: user.balance - amount });
 
-        state.addTransaction({
+        await state.addTransaction({
           userId: user.id,
           type: 'recharge',
           amount: amount,
@@ -203,15 +235,15 @@ export const useAppStore = create<AppState>()(
         });
       },
 
-      withdrawMoney: (userId, method, accountNo, amount) => {
+      withdrawMoney: async (userId, method, accountNo, amount) => {
         const state = get();
         const user = state.users.find(u => u.id === userId);
         if (!user) throw new Error("User not found.");
         if (user.balance < amount) throw new Error("Insufficient balance.");
 
-        state.updateUser(user.id, { balance: user.balance - amount });
+        await state.updateUser(user.id, { balance: user.balance - amount });
 
-        state.addTransaction({
+        await state.addTransaction({
           userId: user.id,
           type: 'withdraw',
           amount: amount,
@@ -229,16 +261,17 @@ export const useAppStore = create<AppState>()(
           throw new Error("Invalid admin credentials");
         }
       },
+
       logoutAdmin: () => set({ adminIsLoggedIn: false }),
       
-      setUserStatus: (userId, status) => {
+      setUserStatus: async (userId, status) => {
         const state = get();
-        state.updateUser(userId, { status });
+        await state.updateUser(userId, { status });
       },
 
-      warnUser: (userId, message) => {
+      warnUser: async (userId, message) => {
         const state = get();
-        state.addTransaction({
+        await state.addTransaction({
           userId: userId,
           type: 'warning',
           amount: 0,
@@ -253,3 +286,78 @@ export const useAppStore = create<AppState>()(
     }
   )
 );
+
+// Real-time Cloud Synchronization with Firestore
+let isFirebaseSynced = false;
+
+export function initFirebaseSync() {
+  if (isFirebaseSynced) return;
+  isFirebaseSynced = true;
+
+  // 1. Real-time Users synchronization across all devices
+  const usersPath = 'users';
+  onSnapshot(collection(db, usersPath), async (snapshot) => {
+    if (snapshot.empty) {
+      // Seed default accounts in Firestore if empty
+      for (const u of INITIAL_USERS) {
+        try {
+          await setDoc(doc(db, 'users', String(u.id)), u);
+        } catch {
+          // Ignore seeding collisions
+        }
+      }
+      return;
+    }
+
+    const cloudUsers: User[] = [];
+    snapshot.forEach((d) => {
+      cloudUsers.push(d.data() as User);
+    });
+
+    cloudUsers.sort((a, b) => a.id - b.id);
+
+    useAppStore.setState((state) => {
+      let updatedCurrentUser = state.currentUser;
+      if (state.currentUser) {
+        const freshUser = cloudUsers.find(u => u.id === state.currentUser?.id);
+        if (freshUser) {
+          updatedCurrentUser = freshUser;
+        }
+      }
+      return {
+        users: cloudUsers,
+        currentUser: updatedCurrentUser
+      };
+    });
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, usersPath);
+  });
+
+  // 2. Real-time Transactions synchronization
+  const txPath = 'transactions';
+  onSnapshot(collection(db, txPath), async (snapshot) => {
+    if (snapshot.empty) {
+      for (const t of INITIAL_TRANSACTIONS) {
+        try {
+          await setDoc(doc(db, 'transactions', t.id), t);
+        } catch {
+          // Ignore
+        }
+      }
+      return;
+    }
+
+    const cloudTxs: Transaction[] = [];
+    snapshot.forEach((d) => {
+      cloudTxs.push(d.data() as Transaction);
+    });
+
+    cloudTxs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    useAppStore.setState({
+      transactions: cloudTxs
+    });
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, txPath);
+  });
+}

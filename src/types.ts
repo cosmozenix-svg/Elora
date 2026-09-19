@@ -35,22 +35,22 @@ export interface AppState {
   setTheme: (theme: 'light' | 'dark') => void;
 
   // User Actions
-  registerUser: (user: Omit<User, 'id'>) => void;
+  registerUser: (user: Omit<User, 'id'>) => Promise<void> | void;
   loginUser: (email: string, pass: string) => void;
   logoutUser: () => void;
-  updateUser: (id: number, updates: Partial<User>) => void;
-  sendMoney: (senderId: number, receiverId: number, amount: number, reference: string) => void;
-  addBalance: (userId: number, amount: number, method: string, trxId: string) => void;
-  earnMoney: (userId: number, amount: number) => void;
-  rechargeMobile: (userId: number, phone: string, amount: number) => void;
-  withdrawMoney: (userId: number, method: string, accountNo: string, amount: number) => void;
+  updateUser: (id: number, updates: Partial<User>) => Promise<void> | void;
+  sendMoney: (senderId: number, receiverId: number, amount: number, reference: string) => Promise<void> | void;
+  addBalance: (userId: number, amount: number, method: string, trxId: string) => Promise<void> | void;
+  earnMoney: (userId: number, amount: number) => Promise<void> | void;
+  rechargeMobile: (userId: number, phone: string, amount: number) => Promise<void> | void;
+  withdrawMoney: (userId: number, method: string, accountNo: string, amount: number) => Promise<void> | void;
   
   // Internal/Shared Actions
-  addTransaction: (t: Omit<Transaction, 'id'>) => void;
+  addTransaction: (t: Omit<Transaction, 'id'>) => Promise<void> | void;
 
   // Admin Actions
   loginAdmin: (user: string, pass: string) => void;
   logoutAdmin: () => void;
-  setUserStatus: (id: number, status: User['status']) => void;
-  warnUser: (id: number, message: string) => void;
+  setUserStatus: (id: number, status: User['status']) => Promise<void> | void;
+  warnUser: (id: number, message: string) => Promise<void> | void;
 }

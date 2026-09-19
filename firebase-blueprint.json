@@ -1,0 +1,141 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User account details, wallet balance, and approval status",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "description": "Unique numeric account ID"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Full legal or display name"
+        },
+        "username": {
+          "type": "string",
+          "description": "Unique account username or mobile number"
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address"
+        },
+        "password": {
+          "type": "string",
+          "description": "User password or PIN"
+        },
+        "balance": {
+          "type": "number",
+          "description": "Current wallet balance"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "pending", "rejected"],
+          "description": "Approval status managed by the admin"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of account creation"
+        },
+        "profilePic": {
+          "type": "string",
+          "description": "Avatar image URL"
+        }
+      },
+      "required": ["id", "fullName", "username", "email", "password", "balance", "status"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial ledger transactions including send money, recharge, deposit, and withdraw",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique transaction tracking code"
+        },
+        "userId": {
+          "type": "number",
+          "description": "Account ID of the initiator or user"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["send", "add", "recharge", "withdraw", "earn"],
+          "description": "Transaction category"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Monetary value in BDT"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["completed", "pending", "failed"],
+          "description": "Transaction processing state"
+        },
+        "date": {
+          "type": "string",
+          "description": "ISO timestamp of transaction"
+        },
+        "reference": {
+          "type": "string",
+          "description": "Transaction reference note or description"
+        },
+        "recipient": {
+          "type": "string",
+          "description": "Recipient username or number"
+        },
+        "operator": {
+          "type": "string",
+          "description": "Mobile operator for mobile recharge"
+        },
+        "method": {
+          "type": "string",
+          "description": "Payment gateway or method (bKash, Nagad, Rocket, Bank)"
+        },
+        "note": {
+          "type": "string",
+          "description": "Additional remarks"
+        }
+      },
+      "required": ["id", "userId", "type", "amount", "status", "date"]
+    },
+    "Notice": {
+      "title": "Notice",
+      "description": "Global marquee notice or app announcement set by admin",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Setting key identifier"
+        },
+        "text": {
+          "type": "string",
+          "description": "Announcement text"
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether the marquee is displayed to users"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last update"
+        }
+      },
+      "required": ["id", "text", "active"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile collection supporting multi-device real-time sync and approval queue"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Global transactions and withdrawal/deposit history"
+    },
+    "/settings/{settingId}": {
+      "schema": "Notice",
+      "description": "System settings and admin announcements"
+    }
+  }
+}
