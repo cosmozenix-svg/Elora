@@ -16,3 +16,23 @@ html, body {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+
+@keyframes floatUpFade {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(0.95);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translate(-50%, -24px) scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -52px) scale(0.9);
+  }
+}
+
+.animate-float-up {
+  animation: floatUpFade 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  pointer-events: none;
+}

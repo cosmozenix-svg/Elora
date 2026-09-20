@@ -41,6 +41,26 @@
         "profilePic": {
           "type": "string",
           "description": "Avatar image URL"
+        },
+        "referralCode": {
+          "type": "string",
+          "description": "Unique 6-character uppercase alphanumeric referral code"
+        },
+        "referredBy": {
+          "type": "string",
+          "description": "Referral code of the user who invited this account"
+        },
+        "referralCount": {
+          "type": "number",
+          "description": "Total count of users registered using this user's referral code"
+        },
+        "isMember": {
+          "type": "boolean",
+          "description": "Whether the user holds permanent Elora Member status"
+        },
+        "membershipPurchasedAt": {
+          "type": "string",
+          "description": "ISO timestamp when the Elora Member status was purchased"
         }
       },
       "required": ["id", "fullName", "username", "email", "password", "balance", "status"]
@@ -60,7 +80,7 @@
         },
         "type": {
           "type": "string",
-          "enum": ["send", "add", "recharge", "withdraw", "earn"],
+          "enum": ["send", "receive", "add", "recharge", "withdraw", "earn", "notice", "warning"],
           "description": "Transaction category"
         },
         "amount": {

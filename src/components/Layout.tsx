@@ -17,7 +17,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     { label: 'Home', path: '/', icon: Home },
     { label: 'Send', path: '/send-money', icon: Send },
     { label: 'Add', path: '/add-money', icon: PlusCircle },
-    { label: 'History', path: '/history', icon: History },
+    { label: 'Index', path: '/index', icon: History },
     { label: 'Profile', path: '/profile', icon: User },
   ];
 
@@ -95,7 +95,9 @@ export default function Layout({ children }: { children: ReactNode }) {
       {/* Android Material Bottom Navigation Bar */}
       <nav className="sticky bottom-0 left-0 right-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 px-2 py-1.5 flex items-center justify-around shadow-sm select-none transition-colors duration-300">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = item.path === '/index'
+            ? location.pathname.startsWith('/index') || location.pathname.startsWith('/history')
+            : location.pathname === item.path;
           const Icon = item.icon;
           return (
             <Link

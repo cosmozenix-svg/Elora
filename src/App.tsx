@@ -11,9 +11,10 @@ import SendMoney from './pages/SendMoney';
 import AddMoney from './pages/AddMoney';
 import EarnMoney from './pages/EarnMoney';
 import Profile from './pages/Profile';
+import Index from './pages/Index';
 import History from './pages/History';
-import Recharge from './pages/Recharge';
 import Withdraw from './pages/Withdraw';
+import Membership from './pages/Membership';
 import Support from './pages/Support';
 import AdminAuth from './pages/AdminAuth';
 import AdminDashboard from './pages/AdminDashboard';
@@ -46,11 +47,14 @@ export default function App() {
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/send-money" element={<ProtectedRoute><SendMoney /></ProtectedRoute>} />
           <Route path="/add-money" element={<ProtectedRoute><AddMoney /></ProtectedRoute>} />
-          <Route path="/recharge" element={<ProtectedRoute><Recharge /></ProtectedRoute>} />
+          <Route path="/membership" element={<ProtectedRoute><Membership /></ProtectedRoute>} />
           <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
           <Route path="/earn-money" element={<ProtectedRoute><EarnMoney /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+          <Route path="/index" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route path="/index/:txId" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route path="/history" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route path="/history/:txId" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
 
           {/* Secret Admin Route - accessed solely via /admin at the end of the URL */}

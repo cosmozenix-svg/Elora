@@ -1,9 +1,10 @@
 import { FormEvent, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppStore } from '../lib/store';
-import { CheckCircle2, ArrowLeft, Dices, Sun, Moon } from 'lucide-react';
+import { CheckCircle2, ArrowLeft, Dices, Sun, Moon, Gift, Sparkles, Check, AlertCircle } from 'lucide-react';
 import { CARTOON_AVATARS, getRandomCartoonAvatar } from '../data/avatars';
 import { cn } from '../lib/utils';
+import EloCoin from '../components/EloCoin';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -12,11 +13,14 @@ export default function Register() {
     email: '',
     password: '',
     confirmPassword: '',
+    referralCode: '',
     termsAccepted: false
   });
   const [selectedAvatar, setSelectedAvatar] = useState(() => CARTOON_AVATARS[0].url);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [submittedReferral, setSubmittedReferral] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { registerUser, users, theme, toggleTheme } = useAppStore();
   const navigate = useNavigate();
 
@@ -24,7 +28,12 @@ export default function Register() {
     setSelectedAvatar(getRandomCartoonAvatar());
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const cleanRef = formData.referralCode.trim().toUpperCase();
+  const matchedReferrer = cleanRef
+    ? users.find((u) => u.referralCode?.toUpperCase() === cleanRef && u.status === 'active')
+    : null;
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -38,8 +47,13 @@ export default function Register() {
       return setError('Email is already registered');
     }
 
+    if (cleanRef && !matchedReferrer) {
+      return setError('The entered referral code is invalid or the account is not yet active. Please check or leave blank.');
+    }
+
+    setIsSubmitting(true);
     try {
-      registerUser({
+      await registerUser({
         fullName: formData.fullName,
         username: formData.username,
         email: formData.email,
@@ -48,10 +62,14 @@ export default function Register() {
         status: 'pending',
         createdAt: new Date().toISOString(),
         profilePic: selectedAvatar
-      });
+      }, cleanRef || undefined);
+
+      setSubmittedReferral(cleanRef);
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Registration failed. Please check internet connection and try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -66,8 +84,23 @@ export default function Register() {
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Account Created!</h2>
+          
+          {submittedReferral ? (
+            <div className="mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-left flex items-start gap-2.5">
+              <EloCoin size="sm" className="shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-bold text-amber-900 dark:text-amber-300">
+                  2,500 Elo Coins Bonus Unlocked!
+                </p>
+                <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-snug">
+                  Referral code <span className="font-mono font-bold text-amber-800 dark:text-amber-200">{submittedReferral}</span> applied. The referrer also received 5,000 coins bonus!
+                </p>
+              </div>
+            </div>
+          ) : null}
+
           <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
-            Your registration is pending admin approval. You will be able to log in as soon as your account is reviewed.
+            Your registration is pending admin approval. You will be able to log in as soon as your account is approved.
           </p>
           <Link
             to="/login"
@@ -218,6 +251,60 @@ export default function Register() {
             />
           </div>
 
+          {/* Referral code (Optional) */}
+          <div className="pt-1">
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                Referral code (Optional)
+              </label>
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200/60 dark:border-amber-800/40">
+                <Gift className="w-3 h-3" /> +2,500 Coins
+              </span>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                maxLength={8}
+                placeholder="e.g. HG67UC"
+                className={cn(
+                  "w-full border rounded-xl py-2 pl-3 pr-9 text-xs font-mono uppercase tracking-wider outline-none transition-colors",
+                  "bg-slate-50/50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500",
+                  cleanRef && matchedReferrer
+                    ? "border-emerald-500 ring-1 ring-emerald-500/30"
+                    : cleanRef && !matchedReferrer
+                    ? "border-rose-400 dark:border-rose-600 ring-1 ring-rose-500/20"
+                    : "border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
+                )}
+                value={formData.referralCode}
+                onChange={e => setFormData({ ...formData, referralCode: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') })}
+              />
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                {cleanRef && matchedReferrer ? (
+                  <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                ) : cleanRef && !matchedReferrer ? (
+                  <AlertCircle className="w-4 h-4 text-rose-500" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5 text-slate-400" />
+                )}
+              </div>
+            </div>
+
+            {cleanRef && matchedReferrer ? (
+              <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                <span>✓ Invited by {matchedReferrer.fullName} (@{matchedReferrer.username})</span>
+                <span className="font-bold">• +2,500 Elo coins</span>
+              </p>
+            ) : cleanRef && !matchedReferrer ? (
+              <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400 font-medium">
+                Referral code not found or account not approved yet.
+              </p>
+            ) : (
+              <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+                Enter code from an approved user's profile to get 2,500 Elo coins welcome bonus!
+              </p>
+            )}
+          </div>
+
           <div className="flex items-center pt-1">
             <input
               required
@@ -234,9 +321,10 @@ export default function Register() {
 
           <button
             type="submit"
-            className="w-full mt-2 py-2.5 px-4 rounded-xl shadow-sm text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 active:scale-[0.98] transition-all"
+            disabled={isSubmitting}
+            className="w-full mt-2 py-2.5 px-4 rounded-xl shadow-sm text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
           >
-            Create Account
+            {isSubmitting ? 'Registering...' : 'Create Account'}
           </button>
         </form>
 

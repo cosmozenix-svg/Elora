@@ -1,6 +1,6 @@
 {
   "name": "Elora",
-  "description": "A 9:16 portrait currency sharing website where you can send, add, earn, recharge, and withdraw money.",
+  "description": "A 9:16 portrait currency sharing website where you can send, add, earn, and withdraw Elo coins.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
